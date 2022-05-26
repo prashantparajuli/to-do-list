@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 
 require('dotenv/config');
 
-const authJwt = require('./helpers/auth');
 const errorHandler = require('./helpers/error-handler');
 
 const userRoutes = require('./routes/user');
