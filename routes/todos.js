@@ -1,30 +1,47 @@
 const router = require('express').Router();
 const { Todos } = require('../models/todos');
-const { verifyAccessToken } = require('../helpers/auth');
+const { verifyLogin } = require('../middlewares/verifyLogin');
+const { check, validationResult } = require('express-validator');
 
-router.post('/', verifyAccessToken, async(req, res) => {
+router.post('/', [
+    check('title').notEmpty().withMessage('Title cannot be empty').isString()
+], verifyLogin, async(req, res) => {
     let todos = new Todos({
         title: req.body.title,
         task: req.body.task,
         completed: req.body.completed,
+        user: req.user._id,
     })
     todos = await todos.save();
     if (!todos) return res.status(400).send('task couldnot be created');
     res.send(todos);
 
-})
-router.get('/', verifyAccessToken, async(req, res) => {
+});
+router.get('/', async(req, res) => {
     const todolist = await Todos.find();
     if (!todolist) return res.json({ status: 'error', message: 'Cannot get todos' });
     res.send(todolist);
-})
+});
+router.get('/mytodos', /*verifyLogin,*/ async(req, res) => {
+    try {
+        const user = req.user;
+        await Todos.find({ userId: user._id }, (todos, err) => {
+            if (err) {
+                return res.status(400).json({ status: 'error', message: 'cannot get todos' });
+            }
+            return res.status(200).send({ status: 'success', data: { todos: todos } })
+        });
+    } catch (err) {
+        return res.status(400).json({ status: 'error', message: 'cannot get todos' });
+    }
+});
 router.get('/:id', async(req, res) => {
     const todolist = await Todos.findById(req.params.id)
 
     if (!todolist) return res.json({ status: 'error', message: 'cannot find todo' });
 
     res.send(todolist);
-})
+});
 router.put('/:id', async(req, res) => {
     const todos = await Todos.findByIdAndUpdate(
         req.params.id, {
@@ -36,7 +53,7 @@ router.put('/:id', async(req, res) => {
     if (!todos) return res.json({ status: 'error', error: 'cannot be updated' });
 
     res.send(todos)
-})
+});
 router.delete('/:id', (req, res) => {
     Todos.findByIdAndRemove(req.params.id).then(product => {
         if (product) {
