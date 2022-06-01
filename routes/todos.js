@@ -1,16 +1,20 @@
 const router = require('express').Router();
 const { Todos } = require('../models/todos');
+const { User } = require('../models/user');
 const { verifyLogin } = require('../middlewares/verifyLogin');
+const { getAuthorization } = require('../middlewares/authorization');
 const { check, validationResult } = require('express-validator');
 
 router.post('/', [
     check('title').notEmpty().withMessage('Title cannot be empty').isString()
 ], verifyLogin, async(req, res) => {
+    const user = req.user;
+    console.log(user);
     let todos = new Todos({
         title: req.body.title,
         task: req.body.task,
         completed: req.body.completed,
-        user: req.user._id,
+        userID: user._id,
     })
     todos = await todos.save();
     if (!todos) return res.status(400).send('task couldnot be created');
@@ -22,16 +26,23 @@ router.get('/', async(req, res) => {
     if (!todolist) return res.json({ status: 'error', message: 'Cannot get todos' });
     res.send(todolist);
 });
-router.get('/mytodos', /*verifyLogin,*/ async(req, res) => {
+router.get('/mytodos', verifyLogin, async(req, res) => {
     try {
         const user = req.user;
-        await Todos.find({ userId: user._id }, (todos, err) => {
+        console.log(user);
+
+        // await req.user.populate(todos).execPopulation();
+        // res.json({ status: "success", data: { posts: todos } });
+        await Todos.findById({ userId: user._id }, (err, todos) => {
+            console.log(todos);
+            console.log(err);
             if (err) {
                 return res.status(400).json({ status: 'error', message: 'cannot get todos' });
             }
             return res.status(200).send({ status: 'success', data: { todos: todos } })
         });
     } catch (err) {
+        console.log(err);
         return res.status(400).json({ status: 'error', message: 'cannot get todos' });
     }
 });
