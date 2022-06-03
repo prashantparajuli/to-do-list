@@ -29,17 +29,29 @@ router.get("/mytodos",
 router.get('/', verifyLogin, getAuthorization, async(req, res) => {
     const user = req.user;
     console.log(user);
-    const todolist = await Todos.find();
-    if (!todolist) return res.json({ status: 'error', message: 'Cannot get todos' });
-    res.send(todolist);
+    // const todolist = await Todos.find();
+    Todos.find().populate('userID', 'name').then((todos, error) => {
+        if (error) {
+            // console.log(error);
+            return res.status(400).send({ status: 'error', error: error });
+        }
+        return res.send(todos);
+    });
+    // if (!todolist) return res.json({ status: 'error', message: 'Cannot get todos' });
+    // res.send(todolist);
 });
 
 //create a new todo
 router.post('/', [
-    check('title').notEmpty().withMessage('Title cannot be empty').isString()
+    check('title').notEmpty().withMessage('Title cannot be empty').isString(),
+    check('task').notEmpty().withMessage('task cannot be empty').isString().withMessage('task must be string'),
 ], verifyLogin, async(req, res) => {
     const user = req.user;
     console.log(user);
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: errors.array() });
+    }
     let todos = new Todos({
         title: req.body.title,
         task: req.body.task,
@@ -62,7 +74,14 @@ router.get('/:id', verifyLogin, userPermission, async(req, res) => {
 });
 
 //update a todo
-router.put('/:id', verifyLogin, userPermission, async(req, res) => {
+router.put('/:id', [
+    check('title').notEmpty().withMessage('Title cannot be empty').isString(),
+    check('task').notEmpty().withMessage('task cannot be empty').isString().withMessage('task must be string'),
+], verifyLogin, userPermission, async(req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: errors.array() });
+    }
     const todos = await Todos.findByIdAndUpdate(
         req.params.id, {
             title: req.body.title,
