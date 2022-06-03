@@ -23,7 +23,7 @@ router.post('/signup', [
         name: req.body.name,
         email: req.body.email,
         password: bcrypt.hashSync(req.body.password, 10),
-        isAdmin: req.body.isAdmin,
+        role: req.body.role,
     })
     user = await user.save();
     if (!user) return res.status(400).send('canot create user');
@@ -40,7 +40,7 @@ router.post('/login', async(req, res) => {
         const accessToken = await jwt.sign({
                 _id: user._id,
                 name: user.name,
-                isAdmin: user.isAdmin
+                role: user.role
             },
             process.env.ACCESS_TOKEN, { expiresIn: '10d' }
         )

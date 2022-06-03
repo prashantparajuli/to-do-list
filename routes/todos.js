@@ -2,8 +2,33 @@ const router = require('express').Router();
 const { Todos } = require('../models/todos');
 const { User } = require('../models/user');
 const { verifyLogin } = require('../middlewares/verifyLogin');
-const { getAuthorization } = require('../middlewares/authorization');
+const { getAuthorization, userPermission } = require('../middlewares/authorization');
 const { check, validationResult } = require('express-validator');
+const mongoose = require('mongoose');
+
+
+
+//get posted notice
+router.get("/mytodos",
+    verifyLogin,
+    async(req, res) => {
+        try {
+            const user = req.user;
+            Todos.find({ userID: user._id }, (error, todos) => {
+                if (error) {
+                    return res.status(400).send({ status: "error", message: "something went wrong while getting your todos!" });
+                }
+                return res.status(200).send({ status: "success", data: { tasks: todos } });
+            });
+        } catch (ex) {
+            return res.status(400).send({ status: "error", message: "Can't get todos" });
+        }
+    });
+
+
+
+
+
 
 router.post('/', [
     check('title').notEmpty().withMessage('Title cannot be empty').isString()
@@ -21,39 +46,22 @@ router.post('/', [
     res.send(todos);
 
 });
-router.get('/', async(req, res) => {
+router.get('/', verifyLogin, getAuthorization, async(req, res) => {
+    const user = req.user;
+    console.log(user);
     const todolist = await Todos.find();
     if (!todolist) return res.json({ status: 'error', message: 'Cannot get todos' });
     res.send(todolist);
 });
-router.get('/mytodos', verifyLogin, async(req, res) => {
-    try {
-        const user = req.user;
-        console.log(user);
 
-        // await req.user.populate(todos).execPopulation();
-        // res.json({ status: "success", data: { posts: todos } });
-        await Todos.findById({ userId: user._id }, (err, todos) => {
-            console.log(todos);
-            console.log(err);
-            if (err) {
-                return res.status(400).json({ status: 'error', message: 'cannot get todos' });
-            }
-            return res.status(200).send({ status: 'success', data: { todos: todos } })
-        });
-    } catch (err) {
-        console.log(err);
-        return res.status(400).json({ status: 'error', message: 'cannot get todos' });
-    }
-});
-router.get('/:id', async(req, res) => {
+router.get('/:id', verifyLogin, userPermission, async(req, res) => {
     const todolist = await Todos.findById(req.params.id)
 
     if (!todolist) return res.json({ status: 'error', message: 'cannot find todo' });
 
     res.send(todolist);
 });
-router.put('/:id', async(req, res) => {
+router.put('/:id', verifyLogin, userPermission, async(req, res) => {
     const todos = await Todos.findByIdAndUpdate(
         req.params.id, {
             title: req.body.title,
@@ -65,7 +73,7 @@ router.put('/:id', async(req, res) => {
 
     res.send(todos)
 });
-router.delete('/:id', (req, res) => {
+router.delete('/:id', verifyLogin, userPermission, (req, res) => {
     Todos.findByIdAndRemove(req.params.id).then(product => {
         if (product) {
             return res.json({ status: 'success', message: 'deleted successfully' });
