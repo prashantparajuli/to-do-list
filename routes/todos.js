@@ -58,7 +58,7 @@ router.get('/:id', verifyLogin, userPermission, async(req, res) => {
 
     if (!todolist) return res.json({ status: 'error', message: 'cannot find todo' });
 
-    res.send(todolist);
+    res.send({ status: 'success', todolist });
 });
 
 //update a todo
@@ -72,7 +72,7 @@ router.put('/:id', verifyLogin, userPermission, async(req, res) => {
     )
     if (!todos) return res.json({ status: 'error', error: 'cannot be updated' });
 
-    res.send(todos)
+    res.send({ status: 'success', todos })
 });
 
 //delete a todo by id
