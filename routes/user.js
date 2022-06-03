@@ -9,7 +9,7 @@ const router = express.Router();
 
 const jwt = require('jsonwebtoken');
 
-
+//user signup
 router.post('/signup', [
     check('name').notEmpty().withMessage('Username cannot be empty'),
     check('email').isEmail().withMessage('please provide valid email'),
@@ -28,8 +28,9 @@ router.post('/signup', [
     user = await user.save();
     if (!user) return res.status(400).send('canot create user');
     res.send(user);
+});
 
-})
+//login with filled credential
 router.post('/login', async(req, res) => {
 
     const user = await User.findOne({ email: req.body.email }).lean();

@@ -8,7 +8,7 @@ function getAuthorization(req, res, next) {
     console.log(user);
     try {
         if (user.role === Role.admin) {
-            next()
+            next();
         } else {
             return res.status(401).send({ status: 'fail', message: 'unauthorized access' })
         }

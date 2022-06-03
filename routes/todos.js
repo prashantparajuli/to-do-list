@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 
 
 
-//get posted notice
+//get todos by logged in users
 router.get("/mytodos",
     verifyLogin,
     async(req, res) => {
@@ -25,11 +25,16 @@ router.get("/mytodos",
         }
     });
 
+//get all todos by admin 
+router.get('/', verifyLogin, getAuthorization, async(req, res) => {
+    const user = req.user;
+    console.log(user);
+    const todolist = await Todos.find();
+    if (!todolist) return res.json({ status: 'error', message: 'Cannot get todos' });
+    res.send(todolist);
+});
 
-
-
-
-
+//create a new todo
 router.post('/', [
     check('title').notEmpty().withMessage('Title cannot be empty').isString()
 ], verifyLogin, async(req, res) => {
@@ -46,14 +51,8 @@ router.post('/', [
     res.send(todos);
 
 });
-router.get('/', verifyLogin, getAuthorization, async(req, res) => {
-    const user = req.user;
-    console.log(user);
-    const todolist = await Todos.find();
-    if (!todolist) return res.json({ status: 'error', message: 'Cannot get todos' });
-    res.send(todolist);
-});
 
+//get todo by id only admin and logged in user
 router.get('/:id', verifyLogin, userPermission, async(req, res) => {
     const todolist = await Todos.findById(req.params.id)
 
@@ -61,6 +60,8 @@ router.get('/:id', verifyLogin, userPermission, async(req, res) => {
 
     res.send(todolist);
 });
+
+//update a todo
 router.put('/:id', verifyLogin, userPermission, async(req, res) => {
     const todos = await Todos.findByIdAndUpdate(
         req.params.id, {
@@ -73,16 +74,18 @@ router.put('/:id', verifyLogin, userPermission, async(req, res) => {
 
     res.send(todos)
 });
+
+//delete a todo by id
 router.delete('/:id', verifyLogin, userPermission, (req, res) => {
     Todos.findByIdAndRemove(req.params.id).then(product => {
         if (product) {
             return res.json({ status: 'success', message: 'deleted successfully' });
         } else {
-            return res.json({ status: 'failed', message: 'product not found' });
+            return res.json({ status: 'failed', message: 'todo not found' });
         }
     }).catch((err) => {
         res.json({ status: 'failed', error: err });
     })
-})
+});
 
 module.exports = router;
