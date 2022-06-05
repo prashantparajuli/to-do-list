@@ -6,6 +6,7 @@ require('dotenv/config');
 
 const errorHandler = require('./helpers/error-handler');
 
+// import routes
 const userRoutes = require('./routes/user');
 const todosRoutes = require('./routes/todos');
 
@@ -13,8 +14,8 @@ const todosRoutes = require('./routes/todos');
 app.use(express.json());
 app.use(errorHandler);
 
-//routes
-const api = process.env.API;
+// routes
+// const api = process.env.API;
 app.use('/users', userRoutes);
 app.use('/todos', todosRoutes)
 
