@@ -5,13 +5,13 @@ const { verifyLogin } = require('../middlewares/verifyLogin');
 const { getAuthorization, userPermission } = require('../middlewares/authorization');
 const { check, validationResult } = require('express-validator');
 const mongoose = require('mongoose');
+const paginatedResult = require('../middlewares/paginatedResult');
 
 
 
 //get todos by logged in users
 router.get("/mytodos",
-    verifyLogin,
-    async(req, res) => {
+    verifyLogin, paginatedResult(Todos), async(req, res) => {
         try {
             const user = req.user;
             Todos.find({ userID: user._id }, (error, todos) => {
@@ -26,7 +26,7 @@ router.get("/mytodos",
     });
 
 //get all todos by admin 
-router.get('/', verifyLogin, getAuthorization, async(req, res) => {
+router.get('/', verifyLogin, getAuthorization, paginatedResult(Todos), async(req, res) => {
     const user = req.user;
     console.log(user);
     // const todolist = await Todos.find();
@@ -35,7 +35,7 @@ router.get('/', verifyLogin, getAuthorization, async(req, res) => {
             // console.log(error);
             return res.status(400).send({ status: 'error', error: error });
         }
-        return res.send(todos);
+        return res.json({ status: 'success', todos: res.paginatedResult });
     });
     // if (!todolist) return res.json({ status: 'error', message: 'Cannot get todos' });
     // res.send(todolist);
