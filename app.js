@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
-
+const path = require('path');
 require('dotenv/config');
 
 const errorHandler = require('./helpers/error-handler');
@@ -10,8 +10,13 @@ const errorHandler = require('./helpers/error-handler');
 const userRoutes = require('./routes/user');
 const todosRoutes = require('./routes/todos');
 
-//middleware
+app.set('view-engine', 'ejs');
+app.set('views', 'views');
+
+app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }))
+
 app.use(errorHandler);
 
 // routes

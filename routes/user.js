@@ -31,7 +31,10 @@ router.post('/signup', [
 });
 
 //login with filled credential
-router.post('/login', async(req, res) => {
+router.get('/login', async(req,res)=>{
+    res.render('./auth/login.ejs');
+})
+router.post('/users/login', async(req, res) => {
 
     const user = await User.findOne({ email: req.body.email }).lean();
 
